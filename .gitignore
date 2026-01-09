@@ -1,0 +1,12 @@
+# Python virtual environment
+env_sc_acapulco/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS files
+.DS_Store
