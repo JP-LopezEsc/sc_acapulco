@@ -1,6 +1,6 @@
 # Estimating the Causal Impact of Hurricane Otis in Acapulco
 
-The final product of this project can be explored in this app.
+The final product of this project can be explored in [this app](https://jp-lopezesc-sc-acapulco-src02-app-cwqm2c.streamlit.app).
 
 ## Overview
 
