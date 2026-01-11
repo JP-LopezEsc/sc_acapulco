@@ -1,115 +1,50 @@
-# Estimating the Causal Impact of Otis on Card Transactions in Acapulco
+# Estimating the Causal Impact of Hurricane Otis in Acapulco
+
+The final product of this project can be explored in this app.
 
 ## Overview
 
-This project estimates the **causal impact of the introduction of Otis** on card transaction activity in **Acapulco**, Mexico. Using transaction-level data aggregated at the municipality–month level, I apply a **Synthetic Control** approach to construct a counterfactual trajectory for Acapulco in the absence of Otis.
+The goal is to illustrate the application of a synthetic control method to evaluate the impact of the hurricane Otis on the economy of Acapulco. Otis was a powerful Category 5 hurricane that made landfall near Acapulco, Mexico, in October 2023, causing significant damage to the city.
 
-The goal of the project is to demonstrate an **industry-relevant data science workflow**:
-
-* Data cleaning and aggregation from raw transactional data
-* Application of a causal inference model
-* Clear visualization and interpretation of results
-* Reproducible, well-documented code
-
-The project is designed as a **portfolio-quality case study**, emphasizing modeling, analysis, and data visualization rather than purely predictive performance.
+While it is obvious that such a natural disaster would have a negative impact on the local economy, quantifying this impact is crucial for understanding the extent of the damage. These results can be used by policymakers, businesses, and aid organizations to make informed decisions regarding recovery efforts and resource allocation.
 
 ---
 
-## Motivation
+## Methodology: Synthetic control
 
-Understanding the impact of new payment terminals or financial infrastructure on local economic activity is a common problem in fintech and applied data science. Simple before–after comparisons can be misleading due to seasonality, macroeconomic trends, or regional shocks.
+The synthetic control method is a causal inference technique that is widely used in several fields including economics, marketing, and public policy. For instance, it can be used to assess the effect of a marketing campaign on sales, the impact of a new policy on economic indicators, or the influence of the introduction of a new product on market share.
 
-To address this, I use **Synthetic Control**, which allows us to:
+In the synthetic control method, a treatment unit (e.g., a geographic location) is exposed to an intervention and the goal is to estimate what would have happened to that treatment unit if the intervention had not occurred. This is achieved by constructing a synthetic control unit, which is a weighted combination of control units (e.g., other geographic locations) that were not exposed to the intervention. The weights are chosen such that the synthetic control unit closely resembles the treatment unit in the pre-intervention period. By comparing the outcomes of the treatment unit and the synthetic control unit in the post-intervention period, we can estimate the causal effect of the intervention.
 
-* Compare Acapulco to a weighted combination of similar municipalities
-* Control for time-varying confounders
-* Estimate a transparent and interpretable counterfactual
+In this project, we used the [tfp-causalimpact](https://github.com/google/tfp-causalimpact) library to implement the synthetic control method.
 
 ---
 
-## Data
-
-### Source
-
-The dataset consists of **card transaction records at payment terminals** across multiple municipalities in Mexico.
-
-Each observation corresponds to a transaction and includes:
-
-* Date
-* Municipality
-* Terminal identifier
-* Transaction amount
-
-### Processing
-
-Raw transaction data are cleaned and aggregated into a **balanced panel**:
-
-* **Unit**: Municipality
-* **Time**: Month
-* **Outcome**: Total transaction revenue per municipality per month
-
-Only municipalities with sufficient pre-treatment history are included in the donor pool.
-
-Raw data are stored in `data/raw/` and are never modified directly. Cleaned and aggregated data are written to `data/processed/`.
-
----
-
-## Treatment Definition
-
-* **Treated unit**: Acapulco
-* **Intervention**: Introduction of Otis
-* **Treatment date**: Defined as the month in which Otis becomes operational in Acapulco
-
-Municipalities that did not receive Otis during the study period form the **donor pool** used to construct the synthetic control.
-
----
-
-## Methodology
-
-### Synthetic Control
-
-Synthetic Control constructs a counterfactual outcome for the treated unit by selecting non-negative weights on control units that minimize pre-treatment discrepancy.
-
-Formally, weights (w) are chosen to solve:
-
-[
-\min_w |Y_{\text{Acapulco}}^{\text{pre}} - Y_{\text{controls}}^{\text{pre}} w|^2
-\quad \text{subject to } w_j \ge 0, ; \sum_j w_j = 1.
-]
-
-The resulting weighted combination of control municipalities represents the estimated outcome trajectory for Acapulco **had Otis not been introduced**.
-
-### Implementation
-
-* Data preparation and aggregation are handled in `01_clean_data.py`
-* Synthetic Control is implemented using **PyMC**, enabling a probabilistic formulation and transparent assumptions
-* Visualizations are produced using `matplotlib` (final figures) and `seaborn` (EDA)
+## Data Source
+The dataset used shows monthly transactions at point-of-sale terminals in Acapulco and other locations in Mexico from 2011 to 2025. This data can be used as a proxy of economic activity in the region, but it is important to note that it does not capture all economic activity, such as cash transactions or transactions in areas without point-of-sale terminals. However, it provides a useful indicator of trends in formal economic activity.
+                
+ Data source: [Banco de México](https://www.banxico.org.mx/SieInternet/consultarDirectorioInternetAction.do?sector=19&accion=consultarCuadro&idCuadro=CF660&locale=es).
 
 ---
 
 ## Repository Structure
 
 ```
-portfolio-synthetic-control/
+sc_acapulco/
 │
 ├── data/
 │   ├── raw/                  # Original transaction data
 │   └── processed/            # Cleaned and aggregated panel data
 │
-├── notebooks/
-│   └── eda.ipynb             # Exploratory data analysis
-│
 ├── src/
 │   ├── 01_clean_data.py      # Data cleaning and aggregation
-│   ├── 02_synthetic_control.py  # Synthetic control estimation (PyMC)
-│   ├── 03_streamlit_app.py   # Interactive Streamlit dashboard
-│   └── utils.py              # Helper functions
+│   └── 02_app.py             # Interactive Streamlit app
+│ 
+├── notebooks/
+│   └── sc_application.ipynb  # Shows how the synthetic control is applied
 │
-├── outputs/
-│   ├── figures/              # Plots and visualizations
-│   └── tables/               # Summary tables
-│
-├── requirements.txt
+├── setup_env.sh              # Contains the steps to create the environment used
+├── requirements.txt          # Modules installed in the environment
 ├── README.md
 └── .gitignore
 ```
@@ -118,76 +53,26 @@ portfolio-synthetic-control/
 
 ## Results
 
-The synthetic control closely matches Acapulco’s transaction trajectory in the **pre-treatment period**, indicating a good counterfactual fit.
+Prior to the hurricane, the synthetic control closely matches Acapulco’s transaction trajectory, indicating a good pre-treatment fit. Immediately after the hurricane, observed transactions experience a sharp decline relative to the counterfactual. Moreover, observed transactions never converge back to the counterfactual, suggesting that, at least until June 2025, Acapulco continues to experience persistent economic effects from the hurricane.
 
-After the introduction of Otis, Acapulco’s observed transaction volume diverges from its synthetic counterpart, suggesting a **causal effect attributable to the intervention**.
-
-Key outputs include:
-
-* Actual vs. synthetic revenue time series
-* Pre/post treatment gaps
-* Summary statistics of estimated treatment effects
-
-All figures are saved in `outputs/figures/`.
+Plots and results can be found in notebooks/sc_application.ipynb.
 
 ---
 
 ## Streamlit App
 
-An interactive Streamlit app allows users to:
+It can be of interest to see the impact over different time horizons after the hurricane, such as the immediate aftermath of the hurricane, as well as the longer-term effects on economic activity in Acapulco. I built a streamlit app to allow users to select different post-hurricane periods to analyze the impact over various time frames.
 
-* Visualize actual vs. synthetic outcomes
-* Zoom into pre- and post-treatment periods
-* Inspect treatment effects over time
-
-To run the app:
-
-```bash
-streamlit run src/03_streamlit_app.py
-```
-
----
-
-## Environment Setup
-
-This project uses **Python 3.11** and a virtual environment.
-
-```bash
-python3 -m venv env_sc_acapulco
-source env_sc_acapulco/bin/activate
-pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
-python -m ipykernel install --user --name env_sc_acapulco --display-name "Python (sc_acapulco)"
-```
+The code used to build the app is in src/02_app.py
 
 ---
 
 ## Assumptions and Limitations
 
-* Synthetic Control assumes that a weighted combination of control municipalities can approximate Acapulco’s counterfactual trend
-* Results depend on the quality of the donor pool and pre-treatment fit
-* Spillover effects or contemporaneous shocks affecting Acapulco but not controls may bias estimates
-
-These limitations are discussed explicitly to emphasize transparency and responsible causal interpretation.
+* Synthetic Control assumes no other municipality was affected by the hurricane.
+* It is also assumed that, in the absence of the intervention, the treated unit would have continued to follow the same relationship with the synthetic control observed in the pre-intervention period.
+* We assume that the volume of point-of-sale (POS) transactions is a reasonable proxy for formal economic activity. However, this measure does not capture all economic activity, such as cash transactions or activity in areas without POS terminal coverage. As a result, economic recovery in Acapulco may have occurred through informal channels, which would not be reflected in the data used for this analysis.
 
 ---
 
-## Next Steps
-
-Potential extensions include:
-
-* Placebo and permutation tests
-* Alternative donor pool definitions
-* Comparison with Difference-in-Differences
-* Incorporation of additional covariates
-
----
-
-## Author
-
-Juan Pablo López Escamilla
-M.S. in Statistics (Duke University)
-
----
-
-*This project is intended for educational and portfolio purposes and does not represent a definitive policy evaluation.*
+*This project is intended only for educational and portfolio purposes.*

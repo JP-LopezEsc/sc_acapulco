@@ -1,9 +1,14 @@
+# Python version: 3.11
+
 pandas>=2.1,<2.3
-numpy>=1.26,<2.1
-matplotlib>=3.8,<3.9
-scipy>=1.11,<1.13
-pymc>=5.10,<5.15
-arviz>=0.16,<0.19
+numpy>=1.24,<2.1
+scipy>=1.10,<1.13
+matplotlib>=3.7,<3.9
+seaborn>=0.12,<0.14
 streamlit>=1.30,<1.36
-scikit-learn>=1.4,<1.6
-ipykernel>=6.28,<6.30
+ipykernel>=6.25,<6.31
+openpyxl>=3.1,<3.2
+tensorflow>=2.15,<2.17
+tensorflow-probability[tf]>=0.23,<0.25
+tfp-causalimpact
+plotly>=5.15,<6
